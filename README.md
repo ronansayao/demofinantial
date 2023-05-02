@@ -41,7 +41,7 @@ The documents are located in Docs folder in the root folder.
 ## Environment
 
 This application requires the following requirements to build and run:
-- **[Required]** [Java17](https://www.java.com/en/download/help/whatis_java.html) - Programming language version 11
+- **[Required]** [Java17](https://www.java.com/en/download/help/whatis_java.html) - Programming language version 17
 - [IntelliJ](https://www.jetbrains.com/idea/) - Recommended IDE
 - **[Required]** [Gradle](https://gradle.org/) - Dependency Management
 
