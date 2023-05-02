@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demofinantial</a> &gt; <a href="index.source.html" class="el_package">com.example.demofinantial.infrastructure.adapters.http</a> &gt; <span class="el_source">PaymentRepository.java</span></div><h1>PaymentRepository.java</h1><pre class="source lang-java linenums">package com.example.demofinantial.infrastructure.adapters.http;
+
+import com.example.demofinantial.application.exception.MalformedRequestException;
+import com.example.demofinantial.domain.Account;
+import com.example.demofinantial.domain.Status;
+import com.example.demofinantial.domain.Transaction;
+import com.example.demofinantial.domain.externalDto.*;
+import com.example.demofinantial.domain.ports.repositories.PaymentRepositoryPort;
+import com.example.demofinantial.infrastructure.configurations.SourceAccountProperties;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+@Component
+<span class="fc" id="L26">public class PaymentRepository implements PaymentRepositoryPort {</span>
+
+    private static final String CURRENCY = &quot;USD&quot;;
+    public static final String CONTENT_TYPE = &quot;Content-Type&quot;;
+
+    @Value(&quot;${external.payment.url}&quot;)
+    private String url;
+
+<span class="fc" id="L34">    private final ObjectMapper objectMapper = new ObjectMapper();</span>
+
+    @Autowired
+    private SourceAccountProperties properties;
+
+    @Override
+    public Transaction transfer(Account destinationAccount, Double amount) throws MalformedRequestException {
+
+        try {
+<span class="fc" id="L43">            PaymentTransactionRequest transaction = init(destinationAccount, amount);</span>
+<span class="fc" id="L44">            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);</span>
+
+<span class="fc" id="L46">            HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L47">                    .uri(new URI(url))</span>
+<span class="fc" id="L48">                    .headers(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="fc" id="L49">                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(transaction)))</span>
+<span class="fc" id="L50">                    .build();</span>
+
+<span class="fc" id="L52">            HttpResponse&lt;String&gt; response = HttpClient.newHttpClient()</span>
+<span class="fc" id="L53">                    .send(request, HttpResponse.BodyHandlers.ofString());</span>
+
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            if (response.statusCode() == 400) {</span>
+<span class="fc" id="L56">                throw new MalformedRequestException();</span>
+            } else {
+<span class="fc" id="L58">                PaymentResponse paymentResponse = objectMapper.readValue(response.body(), PaymentResponse.class);</span>
+<span class="fc" id="L59">                return Transaction.builder()</span>
+<span class="fc" id="L60">                        .status(getStatus(paymentResponse.getRequestInfo().getStatus()))</span>
+<span class="fc" id="L61">                        .paymentTransactionId(paymentResponse.getPaymentInfo().getId())</span>
+<span class="fc" id="L62">                        .message(paymentResponse.getRequestInfo().getError())</span>
+<span class="fc" id="L63">                        .amount(amount).build();</span>
+            }
+
+<span class="nc" id="L66">        } catch (URISyntaxException | IOException | InterruptedException e) {</span>
+<span class="nc" id="L67">            throw new RuntimeException(e);</span>
+        }
+
+    }
+
+    private static Status getStatus(String externalStatus) {
+
+<span class="pc bpc" id="L74" title="1 of 3 branches missed.">        return switch(externalStatus.toLowerCase()) {</span>
+            case &quot;processing&quot;:
+<span class="fc" id="L76">                yield Status.IN_PROGRESS;</span>
+            case &quot;failed&quot;, &quot;timeout&quot;:
+<span class="fc" id="L78">                yield Status.FAILED;</span>
+            default:
+<span class="nc" id="L80">                yield Status.COMPLETED;</span>
+        };
+    }
+
+    private PaymentTransactionRequest init(Account destinationAccount, Double amount) {
+<span class="fc" id="L85">        SourceAccount externalSourceAccount = SourceAccount.builder().type(properties.getType())</span>
+<span class="fc" id="L86">                .sourceInformation(SourceInformation.builder().name(properties.getName()).build())</span>
+<span class="fc" id="L87">                .account(CommonAccount.builder().accountNumber(properties.getAccountNumber())</span>
+<span class="fc" id="L88">                .currency(CURRENCY).routingNumber(properties.getRoutingNumber()).build()).build();</span>
+
+<span class="fc" id="L90">        DestinationAccount externalDestinationAccount = DestinationAccount.builder().name(destinationAccount.getFirstName()+&quot; &quot;+ destinationAccount.getLastName())</span>
+<span class="fc" id="L91">                .account(CommonAccount.builder().accountNumber(destinationAccount.getAccountNumber())</span>
+<span class="fc" id="L92">                        .currency(CURRENCY)</span>
+<span class="fc" id="L93">                        .routingNumber(destinationAccount.getRoutingNumber()).build()).build();</span>
+
+<span class="fc" id="L95">        return PaymentTransactionRequest.builder().source(externalSourceAccount)</span>
+<span class="fc" id="L96">                .destination(externalDestinationAccount)</span>
+<span class="fc" id="L97">                .amount(amount).build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

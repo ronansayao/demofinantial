@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WalletRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demofinantial</a> &gt; <a href="index.source.html" class="el_package">com.example.demofinantial.infrastructure.adapters.http</a> &gt; <span class="el_source">WalletRepository.java</span></div><h1>WalletRepository.java</h1><pre class="source lang-java linenums">package com.example.demofinantial.infrastructure.adapters.http;
+
+import com.example.demofinantial.application.exception.MalformedRequestException;
+import com.example.demofinantial.application.exception.UnknownException;
+import com.example.demofinantial.application.exception.UserNotFoundException;
+import com.example.demofinantial.domain.externalDto.WalletError;
+import com.example.demofinantial.domain.externalDto.WalletTransactionRequest;
+import com.example.demofinantial.domain.externalDto.WalletTransactionResponse;
+import com.example.demofinantial.domain.ports.repositories.WalletRepositoryPort;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+@Component
+<span class="fc" id="L25">public class WalletRepository implements WalletRepositoryPort {</span>
+
+    public static final String CONTENT_TYPE = &quot;Content-Type&quot;;
+
+    @Value(&quot;${external.wallet.url}&quot;)
+    private String url;
+
+<span class="fc" id="L32">    private final ObjectMapper objectMapper = new ObjectMapper();</span>
+
+    @Override
+    public Integer transfer(Integer userId, Double amount) throws MalformedRequestException, UserNotFoundException, UnknownException {
+        try {
+<span class="fc" id="L37">            WalletTransactionRequest walletTransactionRequest = WalletTransactionRequest.builder()</span>
+<span class="fc" id="L38">                    .userId(userId)</span>
+<span class="fc" id="L39">                    .amount(amount).build();</span>
+
+<span class="fc" id="L41">            objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);</span>
+
+<span class="fc" id="L43">            HttpRequest request = HttpRequest.newBuilder()</span>
+<span class="fc" id="L44">                    .uri(new URI(url))</span>
+<span class="fc" id="L45">                    .headers(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="fc" id="L46">                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(walletTransactionRequest)))</span>
+<span class="fc" id="L47">                    .build();</span>
+
+<span class="fc" id="L49">            HttpResponse&lt;String&gt; response = HttpClient.newHttpClient()</span>
+<span class="fc" id="L50">                    .send(request, HttpResponse.BodyHandlers.ofString());</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            if (response.statusCode() == 400) {</span>
+<span class="fc" id="L53">                throw new MalformedRequestException();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            } else if (response.statusCode() == 404) {</span>
+<span class="fc" id="L55">                throw new UserNotFoundException();</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">            } else if (response.statusCode() == 200) {</span>
+<span class="fc" id="L57">                WalletTransactionResponse walletTransactionResponse = objectMapper.readValue(response.body(), WalletTransactionResponse.class);</span>
+<span class="fc" id="L58">                return walletTransactionResponse.getWalletTransactionId();</span>
+            } else {
+<span class="fc" id="L60">                WalletError walletError = objectMapper.readValue(response.body(), WalletError.class);</span>
+<span class="fc" id="L61">                throw new UnknownException(walletError.getCode()+&quot; - &quot;+walletError.getMessage());</span>
+            }
+
+<span class="nc" id="L64">        } catch (URISyntaxException | IOException | InterruptedException e) {</span>
+<span class="nc" id="L65">            throw new RuntimeException(e);</span>
+        }
+
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

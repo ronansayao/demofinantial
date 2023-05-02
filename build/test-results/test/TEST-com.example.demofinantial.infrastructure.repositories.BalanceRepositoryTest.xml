@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.demofinantial.infrastructure.repositories.BalanceRepositoryTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-05-02T13:44:13" hostname="ronan-System-Product-Name" time="0.56">
+  <properties/>
+  <testcase name="getBalance()" classname="com.example.demofinantial.infrastructure.repositories.BalanceRepositoryTest" time="0.56"/>
+  <system-out><![CDATA[2023-05-02T10:44:13.033-03:00  INFO 21372 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.demofinantial.infrastructure.repositories.BalanceRepositoryTest]: BalanceRepositoryTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2023-05-02T10:44:13.034-03:00  INFO 21372 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.demofinantial.DemofinantialApplication for test class com.example.demofinantial.infrastructure.repositories.BalanceRepositoryTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

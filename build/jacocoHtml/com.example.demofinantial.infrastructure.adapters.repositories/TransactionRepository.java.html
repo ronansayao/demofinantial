@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demofinantial</a> &gt; <a href="index.source.html" class="el_package">com.example.demofinantial.infrastructure.adapters.repositories</a> &gt; <span class="el_source">TransactionRepository.java</span></div><h1>TransactionRepository.java</h1><pre class="source lang-java linenums">package com.example.demofinantial.infrastructure.adapters.repositories;
+
+import com.example.demofinantial.domain.Transaction;
+import com.example.demofinantial.domain.dto.FilterParams;
+import com.example.demofinantial.domain.ports.repositories.TransactionRepositoryPort;
+import com.example.demofinantial.infrastructure.adapters.entities.TransactionEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TransactionRepository implements TransactionRepositoryPort {
+
+    private final SpringPageableTransactionRepository springPageableTransactionRepository;
+
+    private final SpringTransactionRepository springTransactionRepository;
+
+<span class="fc" id="L19">    public TransactionRepository(SpringPageableTransactionRepository springPageableTransactionRepository, SpringTransactionRepository springTransactionRepository) {</span>
+<span class="fc" id="L20">        this.springPageableTransactionRepository = springPageableTransactionRepository;</span>
+<span class="fc" id="L21">        this.springTransactionRepository = springTransactionRepository;</span>
+<span class="fc" id="L22">    }</span>
+
+    @Override
+    public Page&lt;Transaction&gt; findByFilter(FilterParams filterParams) {
+<span class="fc" id="L26">        Pageable pageRequest = PageRequest.of(filterParams.getPage(), filterParams.getSize());</span>
+        Page&lt;TransactionEntity&gt; transactionEntities;
+
+<span class="pc bpc" id="L29" title="2 of 4 branches missed.">        if (filterParams.getAmount() != null &amp;&amp; filterParams.getDate() == null) {</span>
+<span class="fc" id="L30">            transactionEntities = springPageableTransactionRepository.findByAmountOrderByCreatedAtDesc(filterParams.getAmount(), pageRequest);</span>
+<span class="nc bnc" id="L31" title="All 4 branches missed.">        } else if (filterParams.getAmount() == null &amp;&amp; filterParams.getDate() != null) {</span>
+<span class="nc" id="L32">            transactionEntities = springPageableTransactionRepository.findByCreatedAtOrderByCreatedAtDesc(filterParams.getDate(), pageRequest);</span>
+        } else {
+<span class="nc" id="L34">            transactionEntities = springPageableTransactionRepository.findByAmountAndCreatedAtOrderByCreatedAtDesc(</span>
+<span class="nc" id="L35">                    filterParams.getAmount(), filterParams.getDate(), pageRequest);</span>
+        }
+<span class="fc" id="L37">        return transactionEntities.map(TransactionEntity::toTransaction);</span>
+    }
+
+    @Override
+    public Transaction save(Transaction transaction) {
+<span class="fc" id="L42">        TransactionEntity entity = new TransactionEntity(transaction);</span>
+<span class="fc" id="L43">        return springTransactionRepository.save(entity).toTransaction();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

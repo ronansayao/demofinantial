@@ -1,0 +1,36 @@
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2
+  datasource:
+    url: jdbc:h2:~/financial
+    username: user
+    password: 123
+    driverClassName: org.h2.Driver
+  jpa:
+    hibernate:
+      ddlAuto: create-drop
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
+external:
+  balance:
+    url: http://mockoon.tools.getontop.com:3000/wallets/balance?user_id=
+  payment:
+    url: http://mockoon.tools.getontop.com:3000/api/v1/payments
+  wallet:
+    url: http://mockoon.tools.getontop.com:3000/wallets/transactions
+
+#property used to
+http:
+  maxRetries: 5
+
+source:
+  account:
+    type: "COMPANY"
+    name: "ONTOP INC"
+    accountNumber: 0245253419
+    routingNumber: 028444018

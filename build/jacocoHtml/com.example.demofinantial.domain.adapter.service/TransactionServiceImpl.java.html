@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demofinantial</a> &gt; <a href="index.source.html" class="el_package">com.example.demofinantial.domain.adapter.service</a> &gt; <span class="el_source">TransactionServiceImpl.java</span></div><h1>TransactionServiceImpl.java</h1><pre class="source lang-java linenums">package com.example.demofinantial.domain.adapter.service;
+
+import com.example.demofinantial.application.exception.*;
+import com.example.demofinantial.domain.Account;
+import com.example.demofinantial.domain.Transaction;
+import com.example.demofinantial.domain.dto.FilterParams;
+import com.example.demofinantial.domain.dto.TransactionDTO;
+import com.example.demofinantial.domain.ports.interfaces.TransactionServicePort;
+import com.example.demofinantial.domain.ports.repositories.*;
+import org.springframework.data.domain.Page;
+
+import java.util.Optional;
+
+public class TransactionServiceImpl implements TransactionServicePort {
+
+    private final AccountRepositoryPort accountRepository;
+
+    private final BalanceRepositoryPort balanceRepository;
+
+    private final PaymentRepositoryPort paymentRepositoryPort;
+
+    private final WalletRepositoryPort walletRepositoryPort;
+
+    private final TransactionRepositoryPort transactionRepositoryPort;
+
+<span class="fc" id="L26">    public TransactionServiceImpl(AccountRepositoryPort accountRepository, BalanceRepositoryPort balanceRepository, PaymentRepositoryPort paymentRepository, WalletRepositoryPort walletRepository, TransactionRepositoryPort transactionRepositoryPort) {</span>
+<span class="fc" id="L27">        this.accountRepository = accountRepository;</span>
+<span class="fc" id="L28">        this.balanceRepository = balanceRepository;</span>
+<span class="fc" id="L29">        this.paymentRepositoryPort = paymentRepository;</span>
+<span class="fc" id="L30">        this.walletRepositoryPort = walletRepository;</span>
+<span class="fc" id="L31">        this.transactionRepositoryPort = transactionRepositoryPort;</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public Transaction transfer(TransactionDTO transferDTO) throws AccountNotFoundException, InsufficientFundsException, MalformedRequestException, UserNotFoundException, UnknownException {
+<span class="fc" id="L36">        Double fee = transferDTO.getAmount()*0.1;</span>
+        //check if account exists
+<span class="fc" id="L38">        Optional&lt;Account&gt; destinationAccount = accountRepository.findByUserId(transferDTO.getUserId());</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">        if (!destinationAccount.isPresent()) {</span>
+<span class="nc" id="L40">            throw new AccountNotFoundException();</span>
+        }
+
+        //check if account has sufficient funds
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (balanceRepository.getBalance(transferDTO.getUserId()).getBalance().compareTo(transferDTO.getAmount() + fee) &lt; 0) {</span>
+<span class="fc" id="L45">            throw new InsufficientFundsException();</span>
+        }
+
+        //call the api that make the payment, and check the status
+<span class="fc" id="L49">        Transaction transaction = paymentRepositoryPort.transfer(destinationAccount.get(), transferDTO.getAmount());</span>
+
+        //call the wallet transaction
+<span class="fc" id="L52">        Integer walletTransactionId = walletRepositoryPort.transfer(transferDTO.getUserId(), transferDTO.getAmount() + fee);</span>
+<span class="fc" id="L53">        transaction.setFee(fee);</span>
+<span class="fc" id="L54">        transaction.setWalletTransactionId(walletTransactionId);</span>
+<span class="fc" id="L55">        transaction.setUserId(transferDTO.getUserId());</span>
+
+        //create internal transaction
+<span class="fc" id="L58">        transaction = transactionRepositoryPort.save(transaction);</span>
+
+<span class="fc" id="L60">        return transaction;</span>
+    }
+
+    @Override
+    public Page&lt;Transaction&gt; searchTransactionsByFilter(FilterParams filterParams) {
+<span class="fc" id="L65">        return transactionRepositoryPort.findByFilter(filterParams);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

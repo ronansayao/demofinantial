@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">demofinantial</a> &gt; <a href="index.source.html" class="el_package">com.example.demofinantial.infrastructure.adapters.entities</a> &gt; <span class="el_source">TransactionEntity.java</span></div><h1>TransactionEntity.java</h1><pre class="source lang-java linenums">package com.example.demofinantial.infrastructure.adapters.entities;
+
+
+import com.example.demofinantial.domain.Status;
+import com.example.demofinantial.domain.Transaction;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = &quot;transaction&quot;)
+public class TransactionEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    private Integer userId;
+    @Enumerated(EnumType.STRING)
+    private Status status;
+    private Double amount;
+    private String message;
+    private Integer walletTransactionId;
+    private UUID paymentTransactionId;
+    private Double fee;
+    @Column(name=&quot;created_at&quot;,updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+<span class="fc" id="L32">    public TransactionEntity() {</span>
+<span class="fc" id="L33">    }</span>
+
+<span class="fc" id="L35">    public TransactionEntity(Transaction transaction) {</span>
+<span class="fc" id="L36">        this.amount = transaction.getAmount();</span>
+<span class="fc" id="L37">        this.createdAt = transaction.getCreatedAt();</span>
+<span class="fc" id="L38">        this.paymentTransactionId = transaction.getPaymentTransactionId();</span>
+<span class="fc" id="L39">        this.walletTransactionId = transaction.getWalletTransactionId();</span>
+<span class="fc" id="L40">        this.message = transaction.getMessage();</span>
+<span class="fc" id="L41">        this.status = transaction.getStatus();</span>
+<span class="fc" id="L42">        this.userId = transaction.getUserId();</span>
+<span class="fc" id="L43">        this.fee = transaction.getFee();</span>
+<span class="fc" id="L44">    }</span>
+
+    public Transaction toTransaction() {
+<span class="fc" id="L47">        return new Transaction(this.id, this.userId, this.status, this.message, this.paymentTransactionId, this.walletTransactionId, this.amount, this.fee, this.createdAt);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
